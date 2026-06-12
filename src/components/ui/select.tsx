@@ -11,17 +11,15 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="w-full flex flex-col gap-2">
         {label && (
-          <label className="text-[13px] font-medium text-neutral-700">
+          <label className="text-[13px] font-medium text-[var(--form-label)]">
             {label}
           </label>
         )}
         <select
           ref={ref}
           className={`
-            w-full bg-white border rounded-xl px-4 py-3 text-[15px] text-neutral-900 placeholder-neutral-400
-            transition-all duration-200 outline-none appearance-none
-            focus:ring-2 focus:ring-neutral-900/5 focus:border-neutral-400
-            ${error ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-neutral-200 hover:border-neutral-300'}
+            form-field glow-on-focus w-full rounded-xl px-4 py-3 text-[15px] appearance-none
+            ${error ? 'form-field--error' : ''}
             ${className}
           `}
           {...props}

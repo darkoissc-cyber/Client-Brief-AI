@@ -8,11 +8,19 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 export const Card: React.FC<CardProps> = ({
   children,
   className = '',
+  hoverable = false,
+  glow = false,
   ...props
 }) => {
+  const interactive = hoverable || glow;
+
   return (
     <div
-      className={`bg-white rounded-2xl border border-neutral-100 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.03)] ${className}`}
+      className={
+        interactive
+          ? `form-card ${className}`
+          : `bg-white rounded-2xl border border-neutral-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.03)] ${className}`
+      }
       {...props}
     >
       {children}

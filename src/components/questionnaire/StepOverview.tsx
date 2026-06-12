@@ -1,115 +1,120 @@
 import React from 'react';
 import { useQuestionnaire } from '@/context/QuestionnaireContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { translations, translateValidationError } from '@/lib/translations';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
 export const StepOverview: React.FC = () => {
   const { formData, errors, updateField } = useQuestionnaire();
+  const { language } = useLanguage();
+  const t = translations[language];
+  const o = t.questionnaire.overview;
   const data = formData.overview;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-start">
       <div>
-        <h2 className="text-xl font-semibold text-neutral-900">
-          Project Overview
+        <h2 className="text-xl font-semibold text-[var(--form-text)]">
+          {o.title}
         </h2>
-        <p className="text-[15px] text-neutral-500 mt-1">
-          Provide basic details and describe your business and project scope.
+        <p className="text-[15px] text-[var(--form-text-muted)] mt-1">
+          {o.desc}
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <Input
-          label="Project Name"
-          placeholder="e.g., Acme E-commerce Website"
+          label={o.fields.projName}
+          placeholder={o.fields.projNamePlaceholder}
           value={data.projectName}
           onChange={(e) =>
             updateField('overview', 'projectName', e.target.value)
           }
-          error={errors.projectName}
+          error={errors.projectName && translateValidationError(errors.projectName, language)}
           required
-          helperText="The public-facing name or working title of your project."
+          helperText={o.fields.projNameHelper}
         />
 
         <Input
-          label="Your Name / Company"
-          placeholder="e.g., John Doe / Acme Corp"
+          label={o.fields.clientName}
+          placeholder={o.fields.clientNamePlaceholder}
           value={data.clientName}
           onChange={(e) =>
             updateField('overview', 'clientName', e.target.value)
           }
-          error={errors.clientName}
+          error={errors.clientName && translateValidationError(errors.clientName, language)}
           required
-          helperText="How you or your organization should be identified in the project files."
+          helperText={o.fields.clientNameHelper}
         />
       </div>
 
       <Input
-        label="Email Address"
+        label={o.fields.email}
         type="email"
-        placeholder="e.g., john@acme.com"
+        placeholder={o.fields.emailPlaceholder}
         value={data.clientEmail}
         onChange={(e) =>
           updateField('overview', 'clientEmail', e.target.value)
         }
-        error={errors.clientEmail}
+        error={errors.clientEmail && translateValidationError(errors.clientEmail, language)}
         required
-        helperText="The primary contact email for project queries and updates."
+        helperText={o.fields.emailHelper}
       />
 
       <Textarea
-        label="Describe your business in detail *"
-        placeholder="Tell us about your company, industry, products/services, and what makes you unique..."
+        label={o.fields.bizDesc}
+        placeholder={o.fields.bizDescPlaceholder}
         value={data.businessDescription}
         onChange={(e) =>
           updateField('overview', 'businessDescription', e.target.value)
         }
-        error={errors.businessDescription}
+        error={errors.businessDescription && translateValidationError(errors.businessDescription, language)}
         rows={4}
         required
-        helperText="Detail what your company does, your products/services, and target market (minimum 150 characters)."
+        helperText={o.fields.bizDescHelper}
         showCounter={true}
       />
 
       <Textarea
-        label="What problem does this project solve? *"
-        placeholder="Explain the pain point or challenge this project is addressing..."
+        label={o.fields.problem}
+        placeholder={o.fields.problemPlaceholder}
         value={data.projectProblem}
         onChange={(e) =>
           updateField('overview', 'projectProblem', e.target.value)
         }
-        error={errors.projectProblem}
+        error={errors.projectProblem && translateValidationError(errors.projectProblem, language)}
         rows={3}
         required
-        helperText="Describe the specific operational issues or client pain points this project resolves."
+        helperText={o.fields.problemHelper}
         showCounter={true}
       />
 
       <Textarea
-        label="Who is the target audience? *"
-        placeholder="e.g., Tech-savvy professionals aged 25-40, small business owners..."
+        label={o.fields.audience}
+        placeholder={o.fields.audiencePlaceholder}
         value={data.targetAudience}
         onChange={(e) =>
           updateField('overview', 'targetAudience', e.target.value)
         }
-        error={errors.targetAudience}
+        error={errors.targetAudience && translateValidationError(errors.targetAudience, language)}
         rows={3}
         required
-        helperText="Define the demographics, roles, and behaviors of your ideal visitors or users."
+        helperText={o.fields.audienceHelper}
         showCounter={true}
       />
 
       <Textarea
-        label="Project Goals & Description *"
-        placeholder="Provide a general description of the project itself..."
+        label={o.fields.goals}
+        placeholder={o.fields.goalsPlaceholder}
         value={data.projectDescription}
         onChange={(e) =>
           updateField('overview', 'projectDescription', e.target.value)
         }
-        error={errors.projectDescription}
+        error={errors.projectDescription && translateValidationError(errors.projectDescription, language)}
         rows={4}
         required
-        helperText="A comprehensive summary of the project scope, context, and desired outcomes (minimum 100 characters)."
+        helperText={o.fields.goalsHelper}
         showCounter={true}
       />
     </div>
@@ -117,3 +122,4 @@ export const StepOverview: React.FC = () => {
 };
 
 export default StepOverview;
+

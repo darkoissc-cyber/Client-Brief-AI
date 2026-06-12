@@ -14,7 +14,7 @@ export default function QuestionnaireLayout({
 }) {
   return (
     <QuestionnaireProvider>
-      <div className="min-h-screen bg-[#fafaf8] text-neutral-900 overflow-x-hidden relative flex flex-col">
+      <div className="min-h-screen bg-[#e8e5df] text-[var(--form-text)] overflow-x-hidden relative flex flex-col">
         <main className="flex-grow flex items-start justify-center py-10 px-4 md:py-16">
           {children}
         </main>

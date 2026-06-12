@@ -1,16 +1,15 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { QuestionnaireData, ValidationErrors } from '@/lib/types';
 import { overviewSchema, technicalSchema, designSchema, scopeSchema } from '@/lib/schemas';
-import { supabase } from '@/lib/supabase';
-import { generateMarkdownBrief, generateAIPrompt } from '@/lib/brief';
 
 interface QuestionnaireContextType {
   currentStep: number;
   formData: QuestionnaireData;
   errors: ValidationErrors;
   submitError: string | null;
+  submitWarning: string | null;
   updateField: <S extends keyof QuestionnaireData, F extends keyof QuestionnaireData[S]>(
     stepKey: S,
     field: F,
@@ -60,49 +59,23 @@ const initialData: QuestionnaireData = {
 
 const QuestionnaireContext = createContext<QuestionnaireContextType | undefined>(undefined);
 
-const LOCAL_STORAGE_KEY = 'client_brief_ai_questionnaire';
+const LEGACY_LOCAL_STORAGE_KEY = 'client_brief_ai_questionnaire';
 
 export const QuestionnaireProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [formData, setFormData] = useState<QuestionnaireData>(initialData);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitWarning, setSubmitWarning] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
-  // Load from local storage
   useEffect(() => {
-    const saved = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_STORAGE_KEY) : null;
-    let parsed = initialData;
-    if (saved) {
-      try {
-        const local = JSON.parse(saved);
-        parsed = {
-          overview: { ...initialData.overview, ...local.overview },
-          technical: { ...initialData.technical, ...local.technical },
-          design: { ...initialData.design, ...local.design },
-          scope: { ...initialData.scope, ...local.scope },
-        };
-      } catch (e) {
-        console.error('Failed to load questionnaire data from local storage', e);
-      }
+    try {
+      window.localStorage.removeItem(LEGACY_LOCAL_STORAGE_KEY);
+    } catch {
+      // Ignore storage access failures in hardened/private browser contexts.
     }
-    setTimeout(() => {
-      setFormData(parsed);
-      setIsInitialized(true);
-    }, 0);
   }, []);
-
-  // Save to local storage
-  useEffect(() => {
-    if (isInitialized) {
-      try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(formData));
-      } catch (e) {
-        console.error('Failed to save questionnaire data to local storage', e);
-      }
-    }
-  }, [formData, isInitialized]);
 
   const updateField = <S extends keyof QuestionnaireData, F extends keyof QuestionnaireData[S]>(
     stepKey: S,
@@ -117,7 +90,6 @@ export const QuestionnaireProvider: React.FC<{ children: React.ReactNode }> = ({
       },
     }));
 
-    // Clear error for this field if it exists
     if (errors[field as string]) {
       setErrors((prev) => {
         const next = { ...prev };
@@ -156,7 +128,6 @@ export const QuestionnaireProvider: React.FC<{ children: React.ReactNode }> = ({
     return true;
   };
 
-  // Check validity silently (without setting UI errors)
   const isStepValid = (step: number): boolean => {
     if (step === 1) return overviewSchema.safeParse(formData.overview).success;
     if (step === 2) return technicalSchema.safeParse(formData.technical).success;
@@ -187,7 +158,6 @@ export const QuestionnaireProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const goToStep = (step: number) => {
-    // Only allow clicking to steps that have already been validated or are previous steps
     if (step < currentStep) {
       setCurrentStep(step);
       setErrors({});
@@ -195,7 +165,6 @@ export const QuestionnaireProvider: React.FC<{ children: React.ReactNode }> = ({
       return;
     }
 
-    // To move forward to 'step', all steps up to step-1 must be valid
     let canProceed = true;
     for (let i = currentStep; i < step; i++) {
       if (!validateStep(i)) {
@@ -212,7 +181,6 @@ export const QuestionnaireProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const submitQuestionnaire = async (): Promise<boolean> => {
-    // Validate all steps first
     for (let i = 1; i <= 4; i++) {
       if (!validateStep(i)) {
         setCurrentStep(i);
@@ -222,54 +190,33 @@ export const QuestionnaireProvider: React.FC<{ children: React.ReactNode }> = ({
 
     setIsSubmitting(true);
     setSubmitError(null);
+    setSubmitWarning(null);
 
     try {
-      const briefMarkdown = generateMarkdownBrief(formData);
-      const aiPromptText = generateAIPrompt(formData);
-
-      const { error } = await supabase.from('submissions').insert({
-        project_name: formData.overview.projectName,
-        client_name: formData.overview.clientName,
-        client_email: formData.overview.clientEmail,
-        project_description: formData.overview.projectDescription,
-        business_description: formData.overview.businessDescription,
-        project_problem: formData.overview.projectProblem,
-        target_audience: formData.overview.targetAudience,
-        primary_goal: formData.technical.primaryGoal,
-        visitor_action: formData.technical.visitorAction,
-        needed_pages: formData.technical.neededPages,
-        important_features: formData.technical.importantFeatures,
-        liked_websites: formData.design.likedWebsites,
-        platform: formData.technical.platform,
-        features: formData.technical.features,
-        traffic: formData.technical.traffic,
-        style: formData.design.style,
-        has_guidelines: formData.design.hasGuidelines,
-        competitors: formData.design.competitors || null,
-        budget: formData.scope.budget,
-        timeline: formData.scope.timeline,
-        content_provider: formData.scope.contentProvider,
-        notes: formData.scope.notes || null,
-        generated_brief: briefMarkdown,
-        generated_prompt: aiPromptText,
-        status: 'new',
+      const response = await fetch('/api/submissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
       });
 
-      if (error) {
-        const msg = [error.message, error.hint, error.code].filter(Boolean).join(' — ');
-        console.error('Supabase insert error:', error);
-        throw new Error(msg || JSON.stringify(error));
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        setSubmitWarning(
+          payload?.error
+            ? `Brief generated locally. Saving failed: ${payload.error}`
+            : 'Brief generated locally, but saving to the database failed.'
+        );
       }
-      
-      // Clear local storage upon successful submit
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
+
       return true;
     } catch (error: unknown) {
       const e = error as Error | null;
-      const message = e?.message || 'Submission failed. Please try again.';
-      console.error('Submission failed:', message, error);
-      setSubmitError(message);
-      return false;
+      setSubmitWarning(
+        e?.message
+          ? `Brief generated locally. Saving failed: ${e.message}`
+          : 'Brief generated locally, but saving to the database failed.'
+      );
+      return true;
     } finally {
       setIsSubmitting(false);
     }
@@ -282,6 +229,7 @@ export const QuestionnaireProvider: React.FC<{ children: React.ReactNode }> = ({
         formData,
         errors,
         submitError,
+        submitWarning,
         updateField,
         nextStep,
         prevStep,

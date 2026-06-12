@@ -1,51 +1,61 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useQuestionnaire } from '@/context/QuestionnaireContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { translations, translateValidationError } from '@/lib/translations';
 import { Textarea } from '@/components/ui/textarea';
+import { choiceBtnClass } from '@/lib/formStyles';
 
-const budgetRanges = [
-  { value: 'under-5k', label: 'Under $5k' },
+const getBudgetRanges = (lang: 'en' | 'ar') => [
+  { value: 'under-5k', label: lang === 'ar' ? 'أقل من $5k' : 'Under $5k' },
   { value: '5k-15k', label: '$5k – $15k' },
   { value: '15k-30k', label: '$15k – $30k' },
   { value: 'over-30k', label: '$30k+' },
 ];
 
-const timelineOptions = [
-  { value: '1-month', label: 'Within 1 month' },
-  { value: '1-3-months', label: '1–3 months' },
-  { value: '3-6-months', label: '3–6 months' },
-  { value: 'flexible', label: 'Flexible' },
+const getTimelineOptions = (lang: 'en' | 'ar') => [
+  { value: '1-month', label: lang === 'ar' ? 'خلال شهر' : 'Within 1 month' },
+  { value: '1-3-months', label: lang === 'ar' ? '1–3 أشهر' : '1–3 months' },
+  { value: '3-6-months', label: lang === 'ar' ? '3–6 أشهر' : '3–6 months' },
+  { value: 'flexible', label: lang === 'ar' ? 'مرن' : 'Flexible' },
 ];
 
-const contentProviders = [
+const getContentProviders = (lang: 'en' | 'ar') => [
   {
     value: 'client',
-    label: 'Client Provided',
-    desc: 'We will provide copy, photos, and structure.',
+    label: lang === 'ar' ? 'العميل يوفر المحتوى' : 'Client Provided',
+    desc: lang === 'ar' ? 'سوف نقوم بتوفير النصوص، الصور، والهيكل التنظيمي.' : 'We will provide copy, photos, and structure.',
   },
   {
     value: 'developer',
-    label: 'Developer Authored',
-    desc: 'We need help writing copy and sourcing media.',
+    label: lang === 'ar' ? 'المطور يكتب المحتوى' : 'Developer Authored',
+    desc: lang === 'ar' ? 'نحتاج لمساعدة في صياغة النصوص وتوفير أصول الميديا.' : 'We need help writing copy and sourcing media.',
   },
   {
     value: 'collab',
-    label: 'Collaborative',
-    desc: 'A mix of client inputs and developer refining.',
+    label: lang === 'ar' ? 'تعاون مشترك' : 'Collaborative',
+    desc: lang === 'ar' ? 'مزيج من مدخلات العميل وتهذيب وتنقيح المطور.' : 'A mix of client inputs and developer refining.',
   },
 ];
 
 export const StepScope: React.FC = () => {
   const { formData, errors, updateField } = useQuestionnaire();
+  const { language } = useLanguage();
+  const t = translations[language];
+  const scope = t.questionnaire.scope;
   const data = formData.scope;
 
+  const budgetRanges = useMemo(() => getBudgetRanges(language), [language]);
+  const timelineOptions = useMemo(() => getTimelineOptions(language), [language]);
+  const contentProviders = useMemo(() => getContentProviders(language), [language]);
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 text-start">
       <div>
         <h2 className="text-xl font-semibold text-neutral-900">
-          Budget & Scope
+          {scope.title}
         </h2>
         <p className="text-[15px] text-neutral-500 mt-1">
-          Project constraints, timeline, and content roles.
+          {scope.desc}
         </p>
       </div>
 
@@ -53,15 +63,15 @@ export const StepScope: React.FC = () => {
       <div className="space-y-3">
         <div>
           <label className="text-[13px] font-medium text-neutral-700 block">
-            Estimated Budget *
+            {scope.fields.budget}
           </label>
           <span className="text-[12px] text-neutral-400 block -mt-0.5">
-            Select the estimated capital allocated for this project.
+            {scope.fields.budgetHelper}
           </span>
         </div>
         {errors.budget && (
           <span className="text-[13px] text-red-500 block -mt-1 font-medium">
-            {errors.budget}
+            {translateValidationError(errors.budget, language)}
           </span>
         )}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
@@ -72,11 +82,7 @@ export const StepScope: React.FC = () => {
                 key={opt.value}
                 type="button"
                 onClick={() => updateField('scope', 'budget', opt.value)}
-                className={`px-3 py-3.5 rounded-xl border text-center transition-all duration-200 outline-none text-[13px] font-medium ${
-                  selected
-                    ? 'border-neutral-900 bg-neutral-50 text-neutral-900'
-                    : 'border-neutral-200 bg-white hover:border-neutral-300 text-neutral-500'
-                }`}
+                className={choiceBtnClass(selected, 'px-3 py-3.5 text-center text-[13px] font-medium cursor-pointer')}
               >
                 {opt.label}
               </button>
@@ -89,15 +95,15 @@ export const StepScope: React.FC = () => {
       <div className="space-y-3">
         <div>
           <label className="text-[13px] font-medium text-neutral-700 block">
-            Target Timeline *
+            {scope.fields.timeline}
           </label>
           <span className="text-[12px] text-neutral-400 block -mt-0.5">
-            Indicate your target release schedule or launch date.
+            {scope.fields.timelineHelper}
           </span>
         </div>
         {errors.timeline && (
           <span className="text-[13px] text-red-500 block -mt-1 font-medium">
-            {errors.timeline}
+            {translateValidationError(errors.timeline, language)}
           </span>
         )}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
@@ -108,11 +114,7 @@ export const StepScope: React.FC = () => {
                 key={opt.value}
                 type="button"
                 onClick={() => updateField('scope', 'timeline', opt.value)}
-                className={`px-3 py-3.5 rounded-xl border text-center transition-all duration-200 outline-none text-[13px] font-medium ${
-                  selected
-                    ? 'border-neutral-900 bg-neutral-50 text-neutral-900'
-                    : 'border-neutral-200 bg-white hover:border-neutral-300 text-neutral-500'
-                }`}
+                className={choiceBtnClass(selected, 'px-3 py-3.5 text-center text-[13px] font-medium cursor-pointer')}
               >
                 {opt.label}
               </button>
@@ -125,15 +127,15 @@ export const StepScope: React.FC = () => {
       <div className="space-y-3">
         <div>
           <label className="text-[13px] font-medium text-neutral-700 block">
-            Who provides the content? *
+            {scope.fields.content}
           </label>
           <span className="text-[12px] text-neutral-400 block -mt-0.5">
-            Define who will supply copy, media assets, and structural text.
+            {scope.fields.contentHelper}
           </span>
         </div>
         {errors.contentProvider && (
           <span className="text-[13px] text-red-500 block -mt-1 font-medium">
-            {errors.contentProvider}
+            {translateValidationError(errors.contentProvider, language)}
           </span>
         )}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -146,11 +148,7 @@ export const StepScope: React.FC = () => {
                 onClick={() =>
                   updateField('scope', 'contentProvider', opt.value)
                 }
-                className={`flex flex-col items-start p-4 rounded-xl border text-left transition-all duration-200 outline-none ${
-                  selected
-                    ? 'border-neutral-900 bg-neutral-50'
-                    : 'border-neutral-200 bg-white hover:border-neutral-300'
-                }`}
+                className={choiceBtnClass(selected, 'flex flex-col items-start p-4 text-start cursor-pointer')}
               >
                 <span
                   className={`text-[13px] font-semibold ${
@@ -170,16 +168,17 @@ export const StepScope: React.FC = () => {
 
       {/* Notes */}
       <Textarea
-        label="Additional Notes"
-        placeholder="Anything else you want to share? Special requests, hosting preferences, etc."
+        label={scope.fields.notes}
+        placeholder={scope.fields.notesPlaceholder}
         value={data.notes}
         onChange={(e) => updateField('scope', 'notes', e.target.value)}
-        error={errors.notes}
+        error={errors.notes && translateValidationError(errors.notes, language)}
         rows={4}
-        helperText="List any specific hosting preferences, third-party integrations, or special design notes."
+        helperText={scope.fields.notesHelper}
         showCounter={true}
       />
     </div>
   );
 };
 export default StepScope;
+

@@ -1,47 +1,60 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useQuestionnaire } from '@/context/QuestionnaireContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { translations, translateValidationError } from '@/lib/translations';
 import { Textarea } from '@/components/ui/textarea';
+import { choiceBtnClass } from '@/lib/formStyles';
 import { Layers, Palette, ShieldCheck, Sparkles } from 'lucide-react';
 
-const visualStyles = [
+const getVisualStyles = (lang: 'en' | 'ar') => [
   {
     id: 'minimalist',
-    name: 'Clean & Minimalist',
-    desc: 'Typography-focused, breathing space, subtle contrasts.',
+    name: lang === 'ar' ? 'بسيط ونظيف (Minimalist)' : 'Clean & Minimalist',
+    desc: lang === 'ar' ? 'تركيز على الخطوط وتنسيق المساحات والفروقات البسيطة.' : 'Typography-focused, breathing space, subtle contrasts.',
     icon: Layers,
   },
   {
     id: 'colorful',
-    name: 'Vibrant & Playful',
-    desc: 'Bold palettes, gradients, interactive animations.',
+    name: lang === 'ar' ? 'نابض بالحياة ومبهج' : 'Vibrant & Playful',
+    desc: lang === 'ar' ? 'ألوان جريئة وتدرجات وتأثيرات تفاعلية حية.' : 'Bold palettes, gradients, interactive animations.',
     icon: Palette,
   },
   {
     id: 'corporate',
-    name: 'Sleek & Professional',
-    desc: 'Clean layout, trusted structure, business aesthetics.',
+    name: lang === 'ar' ? 'أنيق ورسمي (مهني)' : 'Sleek & Professional',
+    desc: lang === 'ar' ? 'تخطيط نظيف، هيكلية موثوقة، جماليات أعمال كلاسيكية.' : 'Clean layout, trusted structure, business aesthetics.',
     icon: ShieldCheck,
   },
   {
     id: 'bold',
-    name: 'Modern & Bold',
-    desc: 'High contrast, dark tones, contemporary feel.',
+    name: lang === 'ar' ? 'حديث وجريء (Modern & Bold)' : 'Modern & Bold',
+    desc: lang === 'ar' ? 'فروقات تباين عالية، ألوان داكنة، مظهر معاصر وجذاب.' : 'High contrast, dark tones, contemporary feel.',
     icon: Sparkles,
   },
 ];
 
 export const StepDesign: React.FC = () => {
   const { formData, errors, updateField } = useQuestionnaire();
+  const { language } = useLanguage();
+  const t = translations[language];
+  const design = t.questionnaire.design;
   const data = formData.design;
 
+  const visualStyles = useMemo(() => getVisualStyles(language), [language]);
+
+  const guidelinesOptions = useMemo(() => [
+    { label: language === 'ar' ? 'نعم، لدينا خطوط إرشادية جاهزة' : 'Yes, we have guidelines', value: true },
+    { label: language === 'ar' ? 'لا، نحتاج لتصميمها من الصفر' : 'No, we need to create them', value: false },
+  ], [language]);
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 text-start">
       <div>
         <h2 className="text-xl font-semibold text-neutral-900">
-          Design & Branding
+          {design.title}
         </h2>
         <p className="text-[15px] text-neutral-500 mt-1">
-          Visual direction, brand guidelines, and websites inspiration.
+          {design.desc}
         </p>
       </div>
 
@@ -49,15 +62,15 @@ export const StepDesign: React.FC = () => {
       <div className="space-y-3">
         <div>
           <label className="text-[13px] font-medium text-neutral-700 block">
-            Visual Style Preference *
+            {design.fields.style}
           </label>
           <span className="text-[12px] text-neutral-400 block -mt-0.5">
-            Select the aesthetic direction that fits your company&apos;s identity.
+            {design.fields.styleHelper}
           </span>
         </div>
         {errors.style && (
           <span className="text-[13px] text-red-500 block -mt-1 font-medium">
-            {errors.style}
+            {translateValidationError(errors.style, language)}
           </span>
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -69,11 +82,7 @@ export const StepDesign: React.FC = () => {
                 key={style.id}
                 type="button"
                 onClick={() => updateField('design', 'style', style.id)}
-                className={`flex items-start gap-3.5 p-4 rounded-xl border text-left transition-all duration-200 outline-none ${
-                  selected
-                    ? 'border-neutral-900 bg-neutral-50'
-                    : 'border-neutral-200 bg-white hover:border-neutral-300'
-                }`}
+                className={choiceBtnClass(selected, 'flex items-start gap-3.5 p-4 text-start cursor-pointer')}
               >
                 <div
                   className={`p-2 rounded-lg ${
@@ -102,22 +111,19 @@ export const StepDesign: React.FC = () => {
       <div className="space-y-3">
         <div>
           <label className="text-[13px] font-medium text-neutral-700 block">
-            Do you have existing brand guidelines? *
+            {design.fields.guidelines}
           </label>
           <span className="text-[12px] text-neutral-400 block -mt-0.5">
-            Indicate if you have existing brand books, colors, typography, or logo files.
+            {design.fields.guidelinesHelper}
           </span>
         </div>
         {errors.hasGuidelines && (
           <span className="text-[13px] text-red-500 block -mt-1 font-medium">
-            {errors.hasGuidelines}
+            {translateValidationError(errors.hasGuidelines, language)}
           </span>
         )}
         <div className="flex flex-col md:flex-row gap-3">
-          {[
-            { label: 'Yes, we have guidelines', value: true },
-            { label: 'No, we need to create them', value: false },
-          ].map((opt) => {
+          {guidelinesOptions.map((opt) => {
             const selected = data.hasGuidelines === opt.value;
             return (
               <button
@@ -126,11 +132,7 @@ export const StepDesign: React.FC = () => {
                 onClick={() =>
                   updateField('design', 'hasGuidelines', opt.value)
                 }
-                className={`flex-1 px-4 py-3 rounded-xl border text-center transition-all duration-200 outline-none text-[13px] font-medium ${
-                  selected
-                    ? 'border-neutral-900 bg-neutral-50 text-neutral-900'
-                    : 'border-neutral-200 bg-white hover:border-neutral-300 text-neutral-500'
-                }`}
+                className={choiceBtnClass(selected, 'flex-1 px-4 py-3 text-center text-[13px] font-medium cursor-pointer')}
               >
                 {opt.label}
               </button>
@@ -141,31 +143,31 @@ export const StepDesign: React.FC = () => {
 
       {/* Competitors */}
       <Textarea
-        label="Competitor Websites or Inspiration *"
-        placeholder="List 2-3 website links or competitor names..."
+        label={design.fields.competitors}
+        placeholder={design.fields.competitorsPlaceholder}
         value={data.competitors}
         onChange={(e) =>
           updateField('design', 'competitors', e.target.value)
         }
-        error={errors.competitors}
+        error={errors.competitors && translateValidationError(errors.competitors, language)}
         rows={4}
         required
-        helperText="Enter competitor websites or direct industry inspirations to check out."
+        helperText={design.fields.competitorsHelper}
         showCounter={true}
       />
 
       {/* Liked Websites */}
       <Textarea
-        label="Share 2-3 websites you like * (with links and why)"
-        placeholder="e.g., https://apple.com (love the clean layout and smooth typography)&#10;https://stripe.com (amazing visual gradients and clean docs style)"
+        label={design.fields.likedWebsites}
+        placeholder={design.fields.likedWebsitesPlaceholder}
         value={data.likedWebsites}
         onChange={(e) =>
           updateField('design', 'likedWebsites', e.target.value)
         }
-        error={errors.likedWebsites}
+        error={errors.likedWebsites && translateValidationError(errors.likedWebsites, language)}
         rows={4}
         required
-        helperText="Share links to any website you admire design-wise and explain what specific elements you want to emulate."
+        helperText={design.fields.likedWebsitesHelper}
         showCounter={true}
       />
     </div>
@@ -173,3 +175,4 @@ export const StepDesign: React.FC = () => {
 };
 
 export default StepDesign;
+

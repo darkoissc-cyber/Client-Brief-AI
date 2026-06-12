@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useQuestionnaire } from '@/context/QuestionnaireContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { translations, translateValidationError } from '@/lib/translations';
 import { Textarea } from '@/components/ui/textarea';
+import { choiceBtnClass } from '@/lib/formStyles';
 import {
   Code,
   Globe,
@@ -16,55 +19,62 @@ import {
   Zap,
 } from 'lucide-react';
 
-const platforms = [
+const getPlatforms = (lang: 'en' | 'ar') => [
   {
     id: 'nextjs',
-    name: 'Next.js / React',
-    desc: 'Modern web app with SSR & performance',
+    name: lang === 'ar' ? 'تطبيق Next.js / React' : 'Next.js / React',
+    desc: lang === 'ar' ? 'موقع ويب حديث مع أداء عالٍ ورندرة على السيرفر (SSR)' : 'Modern web app with SSR & performance',
     icon: Code,
   },
   {
     id: 'wordpress',
     name: 'WordPress',
-    desc: 'Traditional content & blogging',
+    desc: lang === 'ar' ? 'موقع تقليدي لإدارة المحتوى والمدونات' : 'Traditional content & blogging',
     icon: Globe,
   },
   {
     id: 'shopify',
     name: 'Shopify',
-    desc: 'Dedicated e-commerce store',
+    desc: lang === 'ar' ? 'متجر تجارة إلكترونية متكامل ومخصص' : 'Dedicated e-commerce store',
     icon: ShoppingBag,
   },
   {
     id: 'custom',
-    name: 'Custom Platform',
-    desc: 'Custom backend / API stack',
+    name: lang === 'ar' ? 'برمجة خاصة' : 'Custom Platform',
+    desc: lang === 'ar' ? 'قاعدة بيانات مخصصة وبنية API مستقلة' : 'Custom backend / API stack',
     icon: Laptop,
   },
 ];
 
-const featuresList = [
-  { id: 'auth', label: 'User Authentication', icon: Shield },
-  { id: 'payments', label: 'Payments & Checkout', icon: CreditCard },
-  { id: 'cms', label: 'Content Management', icon: PenTool },
-  { id: 'integrations', label: 'Third-party APIs', icon: Database },
-  { id: 'search', label: 'Advanced Search', icon: Search },
-  { id: 'analytics', label: 'Analytics Dashboard', icon: Activity },
-  { id: 'multilingual', label: 'Multi-language', icon: Languages },
-  { id: 'realtime', label: 'Real-time Features', icon: Zap },
+const getFeaturesList = (lang: 'en' | 'ar') => [
+  { id: 'auth', label: lang === 'ar' ? 'توثيق المستخدمين والملفات الشخصية' : 'User Authentication', icon: Shield },
+  { id: 'payments', label: lang === 'ar' ? 'المدفوعات وبوابة الشراء' : 'Payments & Checkout', icon: CreditCard },
+  { id: 'cms', label: lang === 'ar' ? 'نظام إدارة المحتوى (CMS)' : 'Content Management', icon: PenTool },
+  { id: 'integrations', label: lang === 'ar' ? 'الربط مع خدمات خارجية (APIs)' : 'Third-party APIs', icon: Database },
+  { id: 'search', label: lang === 'ar' ? 'البحث المتقدم والفلاتر' : 'Advanced Search', icon: Search },
+  { id: 'analytics', label: lang === 'ar' ? 'لوحة تقارير وإحصائيات' : 'Analytics Dashboard', icon: Activity },
+  { id: 'multilingual', label: lang === 'ar' ? 'دعم لغات متعددة' : 'Multi-language', icon: Languages },
+  { id: 'realtime', label: lang === 'ar' ? 'ميزات بالوقت الفعلي والتفاعلي' : 'Real-time Features', icon: Zap },
 ];
 
-const trafficOptions = [
-  { label: 'Under 10,000 / month', value: 'under-10k' },
-  { label: '10k – 100k / month', value: '10k-100k' },
-  { label: '100k – 1M / month', value: '100k-1m' },
-  { label: 'Over 1M / month', value: 'over-1m' },
-  { label: 'Not sure yet', value: 'unsure' },
+const getTrafficOptions = (lang: 'en' | 'ar') => [
+  { label: lang === 'ar' ? 'أقل من 10,000 / شهرياً' : 'Under 10,000 / month', value: 'under-10k' },
+  { label: lang === 'ar' ? 'من 10,000 إلى 100,000 / شهرياً' : '10k – 100k / month', value: '10k-100k' },
+  { label: lang === 'ar' ? 'من 100,000 إلى 1 مليون / شهرياً' : '100k – 1M / month', value: '100k-1m' },
+  { label: lang === 'ar' ? 'أكثر من 1 مليون / شهرياً' : 'Over 1M / month', value: 'over-1m' },
+  { label: lang === 'ar' ? 'غير متأكد حالياً' : 'Not sure yet', value: 'unsure' },
 ];
 
 export const StepTechnical: React.FC = () => {
   const { formData, errors, updateField } = useQuestionnaire();
+  const { language } = useLanguage();
+  const t = translations[language];
+  const tech = t.questionnaire.technical;
   const data = formData.technical;
+
+  const platforms = useMemo(() => getPlatforms(language), [language]);
+  const featuresList = useMemo(() => getFeaturesList(language), [language]);
+  const trafficOptions = useMemo(() => getTrafficOptions(language), [language]);
 
   const handleFeatureToggle = (featureId: string) => {
     const isSelected = data.features.includes(featureId);
@@ -75,87 +85,87 @@ export const StepTechnical: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 text-start">
       <div>
         <h2 className="text-xl font-semibold text-neutral-900">
-          Project Goals & Capabilities
+          {tech.title}
         </h2>
         <p className="text-[15px] text-neutral-500 mt-1">
-          Define your application goals, features list, and technical setup.
+          {tech.desc}
         </p>
       </div>
 
       {/* Goal & Action */}
       <Textarea
-        label="What is the primary goal of the website/app? *"
-        placeholder="e.g., To allow online users to purchase handmade goods directly from our store..."
+        label={tech.fields.primaryGoal}
+        placeholder={tech.fields.primaryGoalPlaceholder}
         value={data.primaryGoal}
         onChange={(e) =>
           updateField('technical', 'primaryGoal', e.target.value)
         }
-        error={errors.primaryGoal}
+        error={errors.primaryGoal && translateValidationError(errors.primaryGoal, language)}
         rows={3}
         required
-        helperText="State what success looks like for the website (e.g., generate sales, get leads, build trust)."
+        helperText={tech.fields.primaryGoalHelper}
         showCounter={true}
       />
 
       <Textarea
-        label="What action should visitors take? *"
-        placeholder="e.g., Click the 'Buy Now' button, sign up for a newsletter, or fill out a quote request..."
+        label={tech.fields.ctaAction}
+        placeholder={tech.fields.ctaActionPlaceholder}
         value={data.visitorAction}
         onChange={(e) =>
           updateField('technical', 'visitorAction', e.target.value)
         }
-        error={errors.visitorAction}
+        error={errors.visitorAction && translateValidationError(errors.visitorAction, language)}
         rows={3}
         required
-        helperText="Specify the primary action or CTA you want visitors to perform."
+        helperText={tech.fields.ctaActionHelper}
         showCounter={true}
       />
 
       {/* Pages & Features */}
       <Textarea
-        label="List the pages you need * (one per line)"
-        placeholder="Home&#10;About Us&#10;Services&#10;Contact"
+        label={tech.fields.pages}
+        placeholder={tech.fields.pagesPlaceholder}
         value={data.neededPages}
         onChange={(e) =>
           updateField('technical', 'neededPages', e.target.value)
         }
-        error={errors.neededPages}
+        error={errors.neededPages && translateValidationError(errors.neededPages, language)}
         rows={4}
         required
-        helperText="List all the main pages and any secondary pages you want on the website."
+        helperText={tech.fields.pagesHelper}
         showCounter={true}
       />
 
       <Textarea
-        label="List the most important features * (one per line)"
-        placeholder="User signup and email validation&#10;Product search filtering by price&#10;Credit card payments with receipt email"
+        label={tech.fields.customFeatures}
+        placeholder={tech.fields.customFeaturesPlaceholder}
         value={data.importantFeatures}
         onChange={(e) =>
           updateField('technical', 'importantFeatures', e.target.value)
         }
-        error={errors.importantFeatures}
+        error={errors.importantFeatures && translateValidationError(errors.importantFeatures, language)}
         rows={4}
         required
-        helperText="Explain the specific user features and integrations needed for this project."
+        helperText={tech.fields.customFeaturesHelper}
         showCounter={true}
       />
 
       {/* Platform */}
       <div className="space-y-3">
         <div>
-          <label className="text-[13px] font-medium text-neutral-700 block">
-            Preferred Platform *
+          <label className="text-[13px] font-semibold text-neutral-700 block">
+            {tech.fields.platform}
           </label>
           <span className="text-[12px] text-neutral-400 block -mt-0.5">
-            Select the web architecture or platform best suited for your system.
+            {tech.fields.platformHelper}
           </span>
         </div>
         {errors.platform && (
           <span className="text-[13px] text-red-500 block -mt-1 font-medium">
-            {errors.platform}
+            {translateValidationError(errors.platform, language)}
           </span>
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -167,11 +177,7 @@ export const StepTechnical: React.FC = () => {
                 key={p.id}
                 type="button"
                 onClick={() => updateField('technical', 'platform', p.id)}
-                className={`flex items-start gap-3.5 p-4 rounded-xl border text-left transition-all duration-200 outline-none ${
-                  selected
-                    ? 'border-neutral-900 bg-neutral-50'
-                    : 'border-neutral-200 bg-white hover:border-neutral-300'
-                }`}
+                className={choiceBtnClass(selected, 'flex items-start gap-3.5 p-4 text-start cursor-pointer')}
               >
                 <div
                   className={`p-2 rounded-lg ${
@@ -200,14 +206,14 @@ export const StepTechnical: React.FC = () => {
       <div className="space-y-3">
         <div>
           <label className="text-[13px] font-medium text-neutral-700 block">
-            Core Features Checklist *
+            {tech.fields.features}
           </label>
           <span className="text-[12px] text-neutral-400 block -mt-0.5">
-            Select all standard checklist features that your project must include.
+            {tech.fields.featuresHelper}
           </span>
           {errors.features && (
             <span className="text-[13px] text-red-500 block mt-1 font-medium">
-              {errors.features}
+              {translateValidationError(errors.features, language)}
             </span>
           )}
         </div>
@@ -220,11 +226,7 @@ export const StepTechnical: React.FC = () => {
                 key={feat.id}
                 type="button"
                 onClick={() => handleFeatureToggle(feat.id)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all duration-200 outline-none ${
-                  selected
-                    ? 'border-neutral-900 bg-neutral-50'
-                    : 'border-neutral-200 bg-white hover:border-neutral-300'
-                }`}
+                className={choiceBtnClass(selected, 'flex items-center gap-3 px-4 py-3 text-start cursor-pointer')}
               >
                 <Icon
                   className={`h-4 w-4 shrink-0 ${
@@ -239,10 +241,10 @@ export const StepTechnical: React.FC = () => {
                   {feat.label}
                 </span>
                 <div
-                  className={`h-4 w-4 rounded border flex items-center justify-center transition-all ${
+                  className={`h-4 w-4 rounded flex items-center justify-center transition-[border-color,background-color,box-shadow] duration-200 ${
                     selected
-                      ? 'bg-neutral-900 border-neutral-900 text-white'
-                      : 'border-neutral-300 bg-white'
+                      ? 'form-control-mark form-control-mark--selected'
+                      : 'form-control-mark'
                   }`}
                 >
                   {selected && (
@@ -270,15 +272,15 @@ export const StepTechnical: React.FC = () => {
       <div className="space-y-3">
         <div>
           <label className="text-[13px] font-medium text-neutral-700 block">
-            Expected Monthly Traffic *
+            {tech.fields.traffic}
           </label>
           <span className="text-[12px] text-neutral-400 block -mt-0.5">
-            Help us estimate scaling and backend infrastructure capacity.
+            {tech.fields.trafficHelper}
           </span>
         </div>
         {errors.traffic && (
           <span className="text-[13px] text-red-500 block -mt-1 font-medium">
-            {errors.traffic}
+            {translateValidationError(errors.traffic, language)}
           </span>
         )}
         <div className="space-y-2">
@@ -291,19 +293,15 @@ export const StepTechnical: React.FC = () => {
                 onClick={() =>
                   updateField('technical', 'traffic', opt.value)
                 }
-                className={`w-full px-4 py-3 rounded-xl border text-left transition-all duration-200 outline-none text-[13px] font-medium ${
-                  selected
-                    ? 'border-neutral-900 bg-neutral-50 text-neutral-900'
-                    : 'border-neutral-200 bg-white hover:border-neutral-300 text-neutral-600'
-                }`}
+                className={choiceBtnClass(selected, 'w-full px-4 py-3 text-start text-[13px] font-medium cursor-pointer')}
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between w-full">
                   <span>{opt.label}</span>
                   <div
-                    className={`h-4 w-4 rounded-full border-2 flex items-center justify-center transition-all ${
+                    className={`h-4 w-4 rounded-full flex items-center justify-center transition-[border-color,box-shadow] duration-200 ${
                       selected
-                        ? 'border-neutral-900'
-                        : 'border-neutral-300'
+                        ? 'form-control-ring form-control-ring--selected'
+                        : 'form-control-ring'
                     }`}
                   >
                     {selected && (
@@ -321,3 +319,4 @@ export const StepTechnical: React.FC = () => {
 };
 
 export default StepTechnical;
+
